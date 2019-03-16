@@ -1,0 +1,249 @@
+package com.d2vfactory.resttodolist.repository;
+
+import com.d2vfactory.resttodolist.TestDescription;
+import com.d2vfactory.resttodolist.model.common.Status;
+import com.d2vfactory.resttodolist.model.entity.Todo;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import javax.transaction.Transactional;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@Slf4j
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class TodoRepositoryTest {
+
+    @Autowired
+    private TodoRepository repository;
+
+    /*
+     * 할일 2, 3번은 1번에 참조가 걸린 상태이다.
+     * 할일 4번은 할일 1, 3번에 참조가 걸린 상태이다.
+     * 할일 1번은 할일 2번, 3번, 4번이 모두 완료되어야 완료처리가 가능하다.
+     * 할일 3번은 할일 4번이 완료되어야 완료처리가 가능하다.
+        => 할일 1번이 2,3번에 참조 걸었다.
+            => 1: 2, 3
+        => 할일 1번,3번은 할일 4번에 참조 걸었다.
+            => 1: 2,3,4
+            => 3: 4
+     */
+    private List<Todo> createExampleTodo() {
+        repository.deleteAll();
+
+        Todo todo1 = createTodo("집안일");
+        Todo todo2 = createTodo("빨래");
+        Todo todo3 = createTodo("청소");
+        Todo todo4 = createTodo("방청소");
+
+        repository.save(todo1);
+        repository.save(todo2);
+        repository.save(todo3);
+        repository.save(todo4);
+
+        todo1.getReference().add(todo2);
+        todo1.getReference().add(todo3);
+        todo1.getReference().add(todo4);
+        repository.save(todo1);
+
+        todo3.getReference().add(todo4);
+        repository.save(todo3);
+
+        return Arrays.asList(todo1, todo2, todo3, todo4);
+    }
+
+
+    @Test
+    @TestDescription("예제 데이터 전체 구성 테스트")
+    public void exampleData() {
+        // given
+        List<Todo> exampleTodoList = createExampleTodo();
+        Todo todo1 = exampleTodoList.get(0);
+        Todo todo2 = exampleTodoList.get(1);
+        Todo todo3 = exampleTodoList.get(2);
+        Todo todo4 = exampleTodoList.get(3);
+
+        // when
+        List<Todo> todoList = repository.findAll();
+        printTodoInfos(todoList);
+
+        // then
+        // todo1
+        Todo findTodo1 = todoList.get(0);
+        assertThat(findTodo1.getContent()).isEqualTo("집안일");
+        assertThat(findTodo1.getReference()).containsExactly(todo2, todo3, todo4);
+        assertThat(findTodo1.getReferenced()).hasSize(0);
+        // todo2
+        Todo findTodo2 = todoList.get(1);
+        assertThat(findTodo2.getContent()).isEqualTo("빨래");
+        assertThat(findTodo2.getReference()).hasSize(0);
+        assertThat(findTodo2.getReferenced()).containsExactly(todo1);
+        // todo3
+        Todo findTodo3 = todoList.get(2);
+        assertThat(findTodo3.getContent()).isEqualTo("청소");
+        assertThat(findTodo3.getReference()).containsExactly(todo4);
+        assertThat(findTodo3.getReferenced()).containsExactly(todo1);
+        // todo4
+        Todo findTodo4 = todoList.get(3);
+        assertThat(findTodo4.getContent()).isEqualTo("방청소");
+        assertThat(findTodo4.getReference()).hasSize(0);
+        assertThat(findTodo4.getReferenced()).containsExactly(todo1, todo3);
+    }
+
+    @Test
+    @TestDescription("완료 처리 테스트")
+    public void exampleData_updateComplete() {
+        // given
+        List<Todo> exampleTodoList = createExampleTodo();
+        Todo todo1 = exampleTodoList.get(0);
+
+        // when
+        Todo findTodo = repository.findById(todo1.getId()).get();
+        findTodo.setStatus(Status.COMPLETED);
+        findTodo.setCompleteDate(LocalDateTime.now());
+        repository.save(findTodo);
+
+        // then
+        findTodo = repository.findById(todo1.getId()).get();
+        assertThat(findTodo.getStatus()).isEqualTo(Status.COMPLETED);
+    }
+
+    @Test
+    @Transactional
+    @TestDescription("참조 변경 테스트 - 참조가 변경되면 참조된 할일도 제거되어야 한다.")
+    public void exampleData_updateReferenceAndRemoveReferenced() {
+        // given
+        List<Todo> exampleTodoList = createExampleTodo();
+        Todo todo1 = exampleTodoList.get(0);
+        Todo todo2 = exampleTodoList.get(1);
+        Todo todo3 = exampleTodoList.get(2);
+        Todo todo4 = exampleTodoList.get(3);
+
+        // when
+        Todo findTodo1 = repository.findById(todo1.getId()).get();
+        Hibernate.initialize(findTodo1.getReference());
+        List<Todo> newReference = findTodo1.getReference();
+        newReference.remove(todo2);
+        findTodo1.setReference(newReference);
+        repository.save(findTodo1);
+
+        // then
+        Todo newTodo1 = repository.findById(todo1.getId()).get();
+        Hibernate.initialize(newTodo1.getReference());
+        Hibernate.initialize(newTodo1.getReferenced());
+        assertThat(newTodo1.getContent()).isEqualTo("집안일");
+        assertThat(newTodo1.getReference()).containsExactly(todo3, todo4);
+        assertThat(newTodo1.getReferenced()).hasSize(0);
+
+        // todo1에서 참조를 뺏기 때문에, 참조된 목록에서 todo1이 없어야 한다.
+        Todo newTodo2 = repository.findById(todo2.getId()).get();
+        Hibernate.initialize(newTodo2.getReference());
+        Hibernate.initialize(newTodo2.getReferenced());
+        assertThat(newTodo2.getContent()).isEqualTo("빨래");
+        assertThat(newTodo2.getReference()).hasSize(0);
+        assertThat(newTodo2.getReferenced()).hasSize(0);
+    }
+
+    @Test
+    @TestDescription("Page 테스트 - ID 내림차순으로 2개 조회하기.")
+    public void pageable_descendingId_2element() {
+        // given
+        List<Todo> exampleTodoList = createExampleTodo();
+        Todo todo1 = exampleTodoList.get(0);
+        Todo todo3 = exampleTodoList.get(2);
+        Todo todo4 = exampleTodoList.get(3);
+
+        // when
+        Pageable page = PageRequest.of(0, 2, Sort.by("id").descending());
+        Page<Todo> pageTodo = repository.findAll(page);
+
+        // then
+        // page
+        assertThat(pageTodo.getTotalElements()).isEqualTo(4);
+        assertThat(pageTodo.getSize()).isEqualTo(2);
+        assertThat(pageTodo.getContent()).containsExactly(todo4, todo3);
+        // todo3
+        Todo findTodo3 = pageTodo.getContent().get(1);
+        assertThat(findTodo3.getContent()).isEqualTo("청소");
+        assertThat(findTodo3.getReference()).containsExactly(todo4);
+        assertThat(findTodo3.getReferenced()).containsExactly(todo1);
+        // todo4
+        Todo findTodo4 = pageTodo.getContent().get(0);
+        assertThat(findTodo4.getContent()).isEqualTo("방청소");
+        assertThat(findTodo4.getReference()).hasSize(0);
+        assertThat(findTodo4.getReferenced()).containsExactly(todo1, todo3);
+    }
+
+    @Test
+    @TestDescription("상태를 삭제로 변경하기 - Entity에서 DELETED된 상태는 가져오지 못하도록 처리하였기 때문에 조회되지 않아야 한다.")
+    public void status_deleted_todo2() {
+        // given
+        createExampleTodo();
+        List<Todo> todoList = repository.findAll();
+        Todo todo2 = todoList.get(1);
+
+        // when
+        todo2.setStatus(Status.DELETED);
+        repository.save(todo2);
+
+        // then
+        assertThat(repository.findAll()).doesNotContain(todo2);
+    }
+
+    @Test
+    @TestDescription("DB에서 삭제 하기 - 참조를 건 Todo에서 참조를 제외해야 삭제 된다.")
+    public void db_deleted_todo2() {
+        // given
+        createExampleTodo();
+        List<Todo> todoList = repository.findAll();
+        Todo todo2 = todoList.get(1);
+
+        // when
+        // remove todo2
+        for (Todo referedTodo : todo2.getReferenced()) {
+            referedTodo.getReference().remove(todo2);
+            repository.save(referedTodo);
+        }
+        repository.delete(todo2);
+
+        // then
+        assertThat(repository.findAll()).doesNotContain(todo2);
+    }
+
+    private Todo createTodo(String content) {
+        return Todo.builder()
+                .content(content)
+                .build();
+    }
+
+    private void printTodoInfos(List<Todo> todoList) {
+        for (Todo todo : todoList) {
+            log.info("###############################################");
+            log.info("# todo {} : {}({})", todo.getId(), todo.getContent(), todo.getStatus());
+            log.info("# todo {} - reference : {}", todo.getId(),
+                    todo.getReference().stream()
+                            .map(x -> "@" + x.getId() + "(" + x.getStatus() + ")")
+                            .collect(Collectors.joining(" ")));
+            log.info("# todo {} - referenced : {}", todo.getId(),
+                    todo.getReferenced().stream()
+                            .map(x -> "@" + x.getId() + "(" + x.getStatus() + ")")
+                            .collect(Collectors.joining(" ")));
+            log.info("###############################################");
+        }
+
+    }
+}

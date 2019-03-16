@@ -1,0 +1,15 @@
+package com.d2vfactory.resttodolist;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+
+@EnableJpaAuditing
+@SpringBootApplication
+public class RestTodoListApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(RestTodoListApplication.class, args);
+    }
+
+}
