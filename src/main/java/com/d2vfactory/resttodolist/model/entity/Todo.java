@@ -43,14 +43,12 @@ public class Todo extends TimeEntity {
     @NotFound(action = NotFoundAction.IGNORE)
     private Set<Todo> referenced = new HashSet<>();
 
-
     @Builder
     public Todo(String content, List<Todo> reference) {
         this.content = content;
-        if (reference == null)
-            this.reference = new ArrayList<>();
-        else
+        if (reference != null)
             this.reference = reference;
+
     }
 
 }

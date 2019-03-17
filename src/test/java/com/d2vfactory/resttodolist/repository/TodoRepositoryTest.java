@@ -1,71 +1,30 @@
 package com.d2vfactory.resttodolist.repository;
 
+import com.d2vfactory.resttodolist.AbstractRepositoryTest;
 import com.d2vfactory.resttodolist.TestDescription;
 import com.d2vfactory.resttodolist.model.common.Status;
 import com.d2vfactory.resttodolist.model.entity.Todo;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class TodoRepositoryTest {
-
-    @Autowired
-    private TodoRepository repository;
-
-    /*
-     * 할일 2, 3번은 1번에 참조가 걸린 상태이다.
-     * 할일 4번은 할일 1, 3번에 참조가 걸린 상태이다.
-     * 할일 1번은 할일 2번, 3번, 4번이 모두 완료되어야 완료처리가 가능하다.
-     * 할일 3번은 할일 4번이 완료되어야 완료처리가 가능하다.
-        => 할일 1번이 2,3번에 참조 걸었다.
-            => 1: 2, 3
-        => 할일 1번,3번은 할일 4번에 참조 걸었다.
-            => 1: 2,3,4
-            => 3: 4
-     */
-    private List<Todo> createExampleTodo() {
-        repository.deleteAll();
-
-        Todo todo1 = createTodo("집안일");
-        Todo todo2 = createTodo("빨래");
-        Todo todo3 = createTodo("청소");
-        Todo todo4 = createTodo("방청소");
-
-        repository.save(todo1);
-        repository.save(todo2);
-        repository.save(todo3);
-        repository.save(todo4);
-
-        todo1.getReference().add(todo2);
-        todo1.getReference().add(todo3);
-        todo1.getReference().add(todo4);
-        repository.save(todo1);
-
-        todo3.getReference().add(todo4);
-        repository.save(todo3);
-
-        return Arrays.asList(todo1, todo2, todo3, todo4);
-    }
-
+@DataJpaTest
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+public class TodoRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     @TestDescription("예제 데이터 전체 구성 테스트")
@@ -123,8 +82,8 @@ public class TodoRepositoryTest {
     }
 
     @Test
-    @Transactional
     @TestDescription("참조 변경 테스트 - 참조가 변경되면 참조된 할일도 제거되어야 한다.")
+    @Transactional
     public void exampleData_updateReferenceAndRemoveReferenced() {
         // given
         List<Todo> exampleTodoList = createExampleTodo();
@@ -189,6 +148,24 @@ public class TodoRepositoryTest {
     }
 
     @Test
+    @TestDescription("ID In 테스트 -  Id가 2,3인 todo 조회")
+    public void findByIdIn_2And3() {
+        // given
+        List<Todo> exampleTodoList = createExampleTodo();
+        Todo todo2 = exampleTodoList.get(1);
+        Todo todo3 = exampleTodoList.get(2);
+
+        // when
+        List<Todo> todoList = repository.findAllByIdIn(todo2.getId(), todo3.getId());
+
+        // then
+        assertThat(todoList)
+                .extracting("id")
+                .containsExactly(todo2.getId(), todo3.getId());
+
+    }
+
+    @Test
     @TestDescription("상태를 삭제로 변경하기 - Entity에서 DELETED된 상태는 가져오지 못하도록 처리하였기 때문에 조회되지 않아야 한다.")
     public void status_deleted_todo2() {
         // given
@@ -224,26 +201,4 @@ public class TodoRepositoryTest {
         assertThat(repository.findAll()).doesNotContain(todo2);
     }
 
-    private Todo createTodo(String content) {
-        return Todo.builder()
-                .content(content)
-                .build();
-    }
-
-    private void printTodoInfos(List<Todo> todoList) {
-        for (Todo todo : todoList) {
-            log.info("###############################################");
-            log.info("# todo {} : {}({})", todo.getId(), todo.getContent(), todo.getStatus());
-            log.info("# todo {} - reference : {}", todo.getId(),
-                    todo.getReference().stream()
-                            .map(x -> "@" + x.getId() + "(" + x.getStatus() + ")")
-                            .collect(Collectors.joining(" ")));
-            log.info("# todo {} - referenced : {}", todo.getId(),
-                    todo.getReferenced().stream()
-                            .map(x -> "@" + x.getId() + "(" + x.getStatus() + ")")
-                            .collect(Collectors.joining(" ")));
-            log.info("###############################################");
-        }
-
-    }
 }

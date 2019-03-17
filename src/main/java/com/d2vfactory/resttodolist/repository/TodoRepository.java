@@ -22,4 +22,8 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     )
     Page<Todo> findAll(Pageable pageable);
 
+    List<Todo> findAllByIdIn(List<Long> id);
+
+    List<Todo> findAllByIdIn(Long... ids);
+
 }

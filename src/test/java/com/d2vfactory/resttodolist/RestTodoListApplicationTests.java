@@ -7,7 +7,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class RestTodoContentListApplicationTests {
+public class RestTodoListApplicationTests {
 
     @Test
     public void contextLoads() {
