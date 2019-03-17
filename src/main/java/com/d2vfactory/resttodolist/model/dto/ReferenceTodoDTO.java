@@ -33,7 +33,7 @@ public class ReferenceTodoDTO {
         this.id = todo.getId();
         this.content = todo.getContent();
         this.status = todo.getStatus();
-        this.statusName = todo.getStatus().getName();
+        this.statusName = todo.getStatus().getKorName();
         this.createDate = todo.getCreateDate();
         this.updateDate = todo.getUpdateDate();
         this.completeDate = todo.getCompleteDate();

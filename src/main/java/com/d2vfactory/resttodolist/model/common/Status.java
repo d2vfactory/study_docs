@@ -9,10 +9,10 @@ public enum Status {
     DELETED("삭제");
 
     @Getter
-    private String name;
+    private String korName;
 
-    private Status(String name) {
-        this.name = name;
+    Status(String korName) {
+        this.korName = korName;
     }
 
 }

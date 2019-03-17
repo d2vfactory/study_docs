@@ -2,8 +2,10 @@ package com.d2vfactory.resttodolist;
 
 
 import com.d2vfactory.resttodolist.model.entity.Todo;
+import com.d2vfactory.resttodolist.repository.DeleteTodoRepository;
 import com.d2vfactory.resttodolist.repository.TodoRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.sql.Delete;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +22,12 @@ public class AbstractRepositoryTest {
     @Autowired
     protected TodoRepository repository;
 
+    @Autowired
+    protected DeleteTodoRepository deleteRepository;
+
     @Before
     public void setup() {
-        repository.deleteAll();
+        deleteRepository.deleteAll();
     }
 
     /*

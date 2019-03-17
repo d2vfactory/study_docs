@@ -5,11 +5,9 @@ import com.d2vfactory.resttodolist.model.entity.Todo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.ToString;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.hateoas.core.Relation;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -59,7 +57,7 @@ public class TodoDTO {
                         .collect(Collectors.joining(" "))
                         .trim();
 
-        this.statusName = todo.getStatus().getName();
+        this.statusName = todo.getStatus().getKorName();
     }
 
 }

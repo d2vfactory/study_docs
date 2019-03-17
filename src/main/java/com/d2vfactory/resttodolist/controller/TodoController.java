@@ -1,6 +1,8 @@
 package com.d2vfactory.resttodolist.controller;
 
+import com.d2vfactory.resttodolist.model.common.Status;
 import com.d2vfactory.resttodolist.model.dto.TodoDTO;
+import com.d2vfactory.resttodolist.model.form.StatusForm;
 import com.d2vfactory.resttodolist.model.form.TodoForm;
 import com.d2vfactory.resttodolist.model.resource.ErrorResource;
 import com.d2vfactory.resttodolist.model.resource.TodoResource;
@@ -65,6 +67,35 @@ public class TodoController {
 
         TodoResource todoResource = new TodoResource(todo);
         return ResponseEntity.created(createdUri).body(todoResource);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity putTodo(@PathVariable Long id,
+                                  @RequestBody @Valid TodoForm todoForm, Errors errors) {
+
+        if (errors.hasErrors())
+            return badRequest(errors);
+
+        TodoDTO todo = commandService.updateTodo(id, todoForm.getContent(), todoForm.getReferenceIds());
+
+        TodoResource todoResource = new TodoResource(todo);
+        return ResponseEntity.ok(todoResource);
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity putTodoStatus(@PathVariable Long id,
+                                        @RequestBody @Valid StatusForm statusForm, Errors errors) {
+
+        if (errors.hasErrors())
+            return badRequest(errors);
+
+
+        Status status = Status.valueOf(statusForm.getStatus().toUpperCase());
+
+        TodoDTO todo = commandService.updateTodoStatus(id, status);
+
+        TodoResource todoResource = new TodoResource(todo);
+        return ResponseEntity.ok(todoResource);
     }
 
     private ResponseEntity badRequest(Errors errors) {

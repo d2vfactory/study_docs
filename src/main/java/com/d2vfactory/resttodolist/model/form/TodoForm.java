@@ -15,6 +15,7 @@ public class TodoForm {
 
     @NotEmpty
     private String content;
+
     private Long[] referenceIds;
 
 }

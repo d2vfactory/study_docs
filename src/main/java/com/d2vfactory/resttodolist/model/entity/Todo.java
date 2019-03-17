@@ -19,6 +19,7 @@ import java.util.Set;
 @NoArgsConstructor
 @EqualsAndHashCode(of = "id")
 @Where(clause = "status <> 'DELETED'")
+@Table(name = "TODO")
 public class Todo extends TimeEntity {
 
     @Id
