@@ -38,7 +38,7 @@ public class TodoQueryServiceTest extends AbstractRepositoryTest {
 
         // when
         Pageable page = PageRequest.of(0, 2, Sort.by("id").ascending());
-        Page<TodoDTO> todoList = queryService.getTodoList(page);
+        Page<TodoDTO> todoList = queryService.getTodoPages(page);
 
         // then
         assertThat(todoList.getContent()).hasSize(2);

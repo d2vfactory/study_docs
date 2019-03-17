@@ -2,8 +2,11 @@ package com.d2vfactory.resttodolist.model.dto;
 
 import com.d2vfactory.resttodolist.model.common.Status;
 import com.d2vfactory.resttodolist.model.entity.Todo;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.ToString;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.hateoas.core.Relation;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,8 +15,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
-//@ToString(exclude = {"reference", "referenced"})
 @ToString
+@Relation(collectionRelation = "todoList")
 public class TodoDTO {
 
     private Long id;
@@ -26,10 +29,13 @@ public class TodoDTO {
 
     private String statusName;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createDate;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateDate;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime completeDate;
 
     private List<ReferenceTodoDTO> reference;

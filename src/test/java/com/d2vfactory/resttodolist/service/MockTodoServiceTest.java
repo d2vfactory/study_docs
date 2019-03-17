@@ -82,7 +82,7 @@ public class MockTodoServiceTest {
 
         // when
         when(mockRepository.findAll(page)).thenReturn(mockTodoList);
-        Page<TodoDTO> todoDTOList = queryService.getTodoList(page);
+        Page<TodoDTO> todoDTOList = queryService.getTodoPages(page);
 
         // then
         TodoDTO todo1 = todoDTOList.getContent().get(0);

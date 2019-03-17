@@ -4,7 +4,7 @@ package com.d2vfactory.resttodolist;
 import com.d2vfactory.resttodolist.model.entity.Todo;
 import com.d2vfactory.resttodolist.repository.TodoRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -20,6 +20,11 @@ public class AbstractRepositoryTest {
     @Autowired
     protected TodoRepository repository;
 
+    @Before
+    public void setup() {
+        repository.deleteAll();
+    }
+
     /*
      * 할일 2, 3번은 1번에 참조가 걸린 상태이다.
      * 할일 4번은 할일 1, 3번에 참조가 걸린 상태이다.
@@ -32,8 +37,6 @@ public class AbstractRepositoryTest {
             => 3: 4
      */
     protected List<Todo> createExampleTodo() {
-        repository.deleteAll();
-        
         Todo todo1 = createTodo("집안일");
         Todo todo2 = createTodo("빨래");
         Todo todo3 = createTodo("청소");

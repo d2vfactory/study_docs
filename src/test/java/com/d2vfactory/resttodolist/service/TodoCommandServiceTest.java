@@ -56,7 +56,7 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
         TodoDTO todo2 = commandService.createTodo("할일", todo1.getId());
 
         // when
-        Page<TodoDTO> todoList = queryService.getTodoList(PageRequest.of(0, 2, Sort.by("id").ascending()));
+        Page<TodoDTO> todoList = queryService.getTodoPages(PageRequest.of(0, 2, Sort.by("id").ascending()));
 
         // then
         TodoDTO findTodo1 = todoList.getContent().get(0);
@@ -82,6 +82,43 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
     }
 
     @Test
+    @TestDescription("할일 목록 수정 - 내용만 수정하기, 참조초기화")
+    public void updateTodo_content_initReference() {
+        // given
+        TodoDTO todo1 = commandService.createTodo("집안일");
+        TodoDTO todo2 = commandService.createTodo("할일", todo1.getId());
+
+        // when
+        commandService.updateTodo(todo2.getId(), "할일수정-참조초기화");
+        TodoDTO todoDTO = queryService.getTodo(todo2.getId());
+
+        // then
+        assertThat(todo2.getReference()).hasSize(1);
+
+        assertThat(todoDTO.getContent()).isEqualTo("할일수정-참조초기화");
+        assertThat(todoDTO.getReference()).hasSize(0);
+    }
+
+    @Test
+    @TestDescription("할일 목록 수정 - 내용 수정, 참조추가")
+    public void updateTodo_content_addReference() {
+        // given
+        TodoDTO todo1 = commandService.createTodo("집안일");
+        TodoDTO todo2 = commandService.createTodo("할일");
+
+        // when
+        commandService.updateTodo(todo1.getId(), "집안일수정-참조추가", todo2.getId());
+        TodoDTO todoDTO = queryService.getTodo(todo1.getId());
+
+        // then
+        assertThat(todo1.getReference()).hasSize(0);
+
+        assertThat(todoDTO.getContent()).isEqualTo("집안일수정-참조추가");
+        assertThat(todoDTO.getReference()).hasSize(1);
+    }
+
+
+    @Test
     @TestDescription("참조 목록 추가 - 참조를 추가하면 참조된 할일의 참조된 목록에서도 추가된다.")
     public void addReference() {
         // given
@@ -90,7 +127,7 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
 
         // when
         commandService.addReference(todo1.getId(), todo2.getId());
-        Page<TodoDTO> todoList = queryService.getTodoList(PageRequest.of(0, 2, Sort.by("id").ascending()));
+        Page<TodoDTO> todoList = queryService.getTodoPages(PageRequest.of(0, 2, Sort.by("id").ascending()));
 
         // then
         TodoDTO findTodo1 = todoList.getContent().get(0);
@@ -124,7 +161,7 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
 
         // when
         commandService.removeReference(todo2.getId(), todo1.getId());
-        Page<TodoDTO> todoList = queryService.getTodoList(PageRequest.of(0, 2, Sort.by("id").ascending()));
+        Page<TodoDTO> todoList = queryService.getTodoPages(PageRequest.of(0, 2, Sort.by("id").ascending()));
 
         // then
         TodoDTO findTodo1 = todoList.getContent().get(0);
