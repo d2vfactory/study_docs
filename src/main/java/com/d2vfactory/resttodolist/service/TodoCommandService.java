@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Service
 @Transactional
@@ -28,6 +29,9 @@ public class TodoCommandService {
     }
 
     public TodoDTO createTodo(String content, Long... referenceIds) {
+        if (referenceIds == null)
+            return createTodo(content);
+
         Todo todo = repository.save(Todo.builder()
                 .content(content)
                 .reference(repository.findAllByIdIn(referenceIds))
@@ -36,16 +40,28 @@ public class TodoCommandService {
         return new TodoDTO(todo);
     }
 
-    public void addReference(Long id, Long... referenceIds) {
+    public TodoDTO updateTodo(Long id, String content, Long... referenceIds) {
         Todo todo = findById(id);
-        todo.getReference().addAll(repository.findAllByIdIn(referenceIds));
-        repository.save(todo);
+        todo.setContent(content);
+        if (referenceIds == null) {
+            todo.setReference(new ArrayList<>());
+        } else {
+            todo.setReference(repository.findAllByIdIn(referenceIds));
+        }
+
+        return new TodoDTO(todo);
     }
 
-    public void removeReference(Long id, Long... referenceIds) {
+    public TodoDTO addReference(Long id, Long... referenceIds) {
+        Todo todo = findById(id);
+        todo.getReference().addAll(repository.findAllByIdIn(referenceIds));
+        return new TodoDTO(repository.save(todo));
+    }
+
+    public TodoDTO removeReference(Long id, Long... referenceIds) {
         Todo todo = findById(id);
         todo.getReference().removeAll(repository.findAllByIdIn(referenceIds));
-        repository.save(todo);
+        return new TodoDTO(repository.save(todo));
     }
 
     public void deleteTodo(Long id) {
@@ -54,7 +70,7 @@ public class TodoCommandService {
         repository.save(todo);
     }
 
-    public void completeTodo(Long id) {
+    public TodoDTO completeTodo(Long id) {
         Todo todo = findById(id);
         Hibernate.initialize(todo.getReference());
 
@@ -68,7 +84,7 @@ public class TodoCommandService {
 
         todo.setStatus(Status.COMPLETED);
         todo.setCompleteDate(LocalDateTime.now());
-        repository.save(todo);
+        return new TodoDTO(repository.save(todo));
     }
 
     private Todo findById(Long id) {

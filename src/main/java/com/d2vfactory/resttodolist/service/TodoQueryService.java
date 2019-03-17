@@ -23,12 +23,12 @@ public class TodoQueryService {
         this.repository = repository;
     }
 
-    public Page<TodoDTO> getTodoList(Pageable pageable) {
-        Page<Todo> todoList = repository.findAll(pageable);
+    public Page<TodoDTO> getTodoPages(Pageable pageable) {
+        Page<Todo> todoPages = repository.findAll(pageable);
         return new PageImpl<>(
-                todoList.getContent().stream().map(TodoDTO::new).collect(Collectors.toList()),
+                todoPages.getContent().stream().map(TodoDTO::new).collect(Collectors.toList()),
                 pageable,
-                todoList.getTotalElements()
+                todoPages.getTotalElements()
         );
     }
 
