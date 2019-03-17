@@ -49,7 +49,7 @@ public class TodoCommandService {
             todo.setReference(repository.findAllByIdIn(referenceIds));
         }
 
-        return new TodoDTO(todo);
+        return new TodoDTO(repository.save(todo));
     }
 
     public TodoDTO addReference(Long id, Long... referenceIds) {
@@ -64,13 +64,16 @@ public class TodoCommandService {
         return new TodoDTO(repository.save(todo));
     }
 
-    public void deleteTodo(Long id) {
+    public TodoDTO updateTodoStatus(Long id, Status status) {
+        if (status == Status.COMPLETED)
+            return completeTodo(id);
+
         Todo todo = findById(id);
-        todo.setStatus(Status.DELETED);
-        repository.save(todo);
+        todo.setStatus(status);
+        return new TodoDTO(repository.save(todo));
     }
 
-    public TodoDTO completeTodo(Long id) {
+    private TodoDTO completeTodo(Long id) {
         Todo todo = findById(id);
         Hibernate.initialize(todo.getReference());
 
@@ -90,4 +93,5 @@ public class TodoCommandService {
     private Todo findById(Long id) {
         return repository.findById(id).orElseThrow(NotFoundTodoException::new);
     }
+
 }

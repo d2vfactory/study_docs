@@ -4,6 +4,7 @@ package com.d2vfactory.resttodolist.service;
 import com.d2vfactory.resttodolist.TestDescription;
 import com.d2vfactory.resttodolist.exceptions.HasReferenceTodoException;
 import com.d2vfactory.resttodolist.exceptions.NotFoundTodoException;
+import com.d2vfactory.resttodolist.model.common.Status;
 import com.d2vfactory.resttodolist.model.dto.TodoDTO;
 import com.d2vfactory.resttodolist.model.entity.Todo;
 import com.d2vfactory.resttodolist.repository.TodoRepository;
@@ -116,7 +117,7 @@ public class MockTodoServiceTest {
 
         // when
         when(mockRepository.findById(1L)).thenReturn(Optional.of(mockTodo1));
-        commandService.completeTodo(1L);
+        commandService.updateTodoStatus(1L, Status.COMPLETED);
 
         // then
         // throw new HasReferenceTodoException

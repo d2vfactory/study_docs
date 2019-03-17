@@ -183,15 +183,15 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
                 .hasSize(0);
     }
 
-    @Test()
+    @Test
     @TestDescription("TODO 삭제, 실제로는 STATUS가 DELETED로 변경되는것이지만, 참조된 목록도 조회에서 제외된다.")
-    public void deleteTodo() {
+    public void updateStatus_deleted() {
         // given
         TodoDTO todo1 = commandService.createTodo("집안일");
         TodoDTO todo2 = commandService.createTodo("할일", todo1.getId());
 
         // when
-        commandService.deleteTodo(todo1.getId());
+        commandService.updateTodoStatus(todo1.getId(), Status.DELETED);
 
         TodoDTO findTodo1 = null;
         try {
@@ -209,12 +209,12 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
 
     @Test(expected = NotFoundTodoException.class)
     @TestDescription("없는 ID로 삭제시, deleteTodo_NotFoundTodoException 발생")
-    public void deleteTodo_NotFoundTodoException() {
+    public void updateStatus_deleted_NotFoundTodoException() {
         // given
         Long notExistId = Long.MAX_VALUE;
 
         // when
-        commandService.deleteTodo(notExistId);
+        commandService.updateTodoStatus(notExistId, Status.DELETED);
 
         // then
         // => NotFoundTodoException
@@ -222,14 +222,14 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
 
     @Test
     @TestDescription("할일 참조를 가지고 있는 할일을 완료 처리 할 경우, 참조된 할일이 완료 되어있어야한다.")
-    public void completeTodo() {
+    public void updateStatus_completed() {
         // given
         TodoDTO todo1 = commandService.createTodo("집안일");
         TodoDTO todo2 = commandService.createTodo("할일", todo1.getId());
 
         // when
-        commandService.completeTodo(todo1.getId());
-        commandService.completeTodo(todo2.getId());
+        commandService.updateTodoStatus(todo1.getId(), Status.COMPLETED);
+        commandService.updateTodoStatus(todo2.getId(), Status.COMPLETED);
 
         // then
         TodoDTO findTodo1 = queryService.getTodo(todo1.getId());
@@ -241,16 +241,34 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
 
     @Test(expected = HasReferenceTodoException.class)
     @TestDescription("할일 참조를 가지고 있는 할일을 완료 처리 할 경우, HasReferenceTodoException 발생")
-    public void completeTodo_HasReferenceTodoException() {
+    public void updateStatus_completed_HasReferenceTodoException() {
         // given
         TodoDTO todo1 = commandService.createTodo("집안일");
         TodoDTO todo2 = commandService.createTodo("할일", todo1.getId());
 
         // when
-        commandService.completeTodo(todo2.getId());
+        commandService.updateTodoStatus(todo2.getId(), Status.COMPLETED);
 
         // then
         // => HasReferenceTodoException
 
+    }
+
+    @Test
+    @TestDescription("할일을 completed 상태로 변경했다가 다시 todo 상태로 변경하기")
+    public void updateStatus_completed_todo() {
+        // given
+        TodoDTO todo1 = commandService.createTodo("집안일");
+
+        // when
+        commandService.updateTodoStatus(todo1.getId(), Status.COMPLETED);
+        TodoDTO findTodo1 = queryService.getTodo(todo1.getId());
+
+        commandService.updateTodoStatus(todo1.getId(), Status.TODO);
+        TodoDTO findTodo2 = queryService.getTodo(todo1.getId());
+
+        // then
+        assertThat(findTodo1.getStatus()).isEqualTo(Status.COMPLETED);
+        assertThat(findTodo2.getStatus()).isEqualTo(Status.TODO);
     }
 }
