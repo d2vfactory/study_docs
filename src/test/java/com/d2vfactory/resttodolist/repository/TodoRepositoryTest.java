@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,7 +37,7 @@ public class TodoRepositoryTest extends AbstractRepositoryTest {
         Todo todo4 = exampleTodoList.get(3);
 
         // when
-        List<Todo> todoList = repository.findAll();
+        List<Todo> todoList = repository.fetchFindAll();
         printTodoInfos(todoList);
 
         // then
@@ -94,7 +95,7 @@ public class TodoRepositoryTest extends AbstractRepositoryTest {
         // when
         Todo findTodo1 = repository.findById(todo1.getId()).get();
         Hibernate.initialize(findTodo1.getReference());
-        List<Todo> newReference = findTodo1.getReference();
+        Set<Todo> newReference = findTodo1.getReference();
         newReference.remove(todo2);
         findTodo1.setReference(newReference);
         repository.save(findTodo1);
@@ -127,7 +128,7 @@ public class TodoRepositoryTest extends AbstractRepositoryTest {
 
         // when
         Pageable page = PageRequest.of(0, 2, Sort.by("id").descending());
-        Page<Todo> pageTodo = repository.findAll(page);
+        Page<Todo> pageTodo = repository.fetchFindAll(page);
 
         // then
         // page
@@ -155,7 +156,7 @@ public class TodoRepositoryTest extends AbstractRepositoryTest {
         Todo todo3 = exampleTodoList.get(2);
 
         // when
-        List<Todo> todoList = repository.findAllByIdIn(todo2.getId(), todo3.getId());
+        Set<Todo> todoList = repository.findAllByIdIn(todo2.getId(), todo3.getId());
 
         // then
         assertThat(todoList)
@@ -169,7 +170,7 @@ public class TodoRepositoryTest extends AbstractRepositoryTest {
     public void status_deleted_todo2() {
         // given
         createExampleTodo();
-        List<Todo> todoList = repository.findAll();
+        List<Todo> todoList = repository.fetchFindAll();
         Todo todo2 = todoList.get(1);
 
         // when
@@ -177,7 +178,7 @@ public class TodoRepositoryTest extends AbstractRepositoryTest {
         repository.save(todo2);
 
         // then
-        assertThat(repository.findAll()).doesNotContain(todo2);
+        assertThat(repository.fetchFindAll()).doesNotContain(todo2);
     }
 
     @Test
@@ -185,7 +186,7 @@ public class TodoRepositoryTest extends AbstractRepositoryTest {
     public void db_deleted_todo2() {
         // given
         createExampleTodo();
-        List<Todo> todoList = repository.findAll();
+        List<Todo> todoList = repository.fetchFindAll();
         Todo todo2 = todoList.get(1);
 
         // when
@@ -197,7 +198,7 @@ public class TodoRepositoryTest extends AbstractRepositoryTest {
         repository.delete(todo2);
 
         // then
-        assertThat(repository.findAll()).doesNotContain(todo2);
+        assertThat(repository.fetchFindAll()).doesNotContain(todo2);
     }
 
 }

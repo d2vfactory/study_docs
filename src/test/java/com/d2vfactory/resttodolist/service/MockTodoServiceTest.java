@@ -82,7 +82,7 @@ public class MockTodoServiceTest {
         Page<Todo> mockTodoList = new PageImpl<>(Arrays.asList(mockTodo1, mockTodo2), page, 2);
 
         // when
-        when(mockRepository.findAll(page)).thenReturn(mockTodoList);
+        when(mockRepository.fetchFindAll(page)).thenReturn(mockTodoList);
         Page<TodoDTO> todoDTOList = queryService.getTodoPages(page);
 
         // then

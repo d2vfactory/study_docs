@@ -37,7 +37,7 @@ public class Todo extends TimeEntity {
     @OrderBy("id ASC")
     @JoinColumn(name = "reference_id")
     @NotFound(action = NotFoundAction.IGNORE)
-    private List<Todo> reference = new ArrayList<>();
+    private Set<Todo> reference = new HashSet<>();
 
     @OrderBy("id ASC")
     @ManyToMany(mappedBy = "reference")
@@ -45,7 +45,8 @@ public class Todo extends TimeEntity {
     private Set<Todo> referenced = new HashSet<>();
 
     @Builder
-    public Todo(String content, List<Todo> reference) {
+    //public Todo(String content, List<Todo> reference) {
+    public Todo(String content, Set<Todo> reference) {
         this.content = content;
         if (reference != null)
             this.reference = reference;
