@@ -31,7 +31,7 @@ public class DeleteTodo {
     @ManyToMany
     @OrderBy("id ASC")
     @JoinColumn(name = "reference_id")
-    private List<DeleteTodo> reference = new ArrayList<>();
+    private Set<DeleteTodo> reference = new HashSet<>();
 
     @OrderBy("id ASC")
     @ManyToMany(mappedBy = "reference")

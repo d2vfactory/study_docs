@@ -45,7 +45,6 @@ public class Todo extends TimeEntity {
     private Set<Todo> referenced = new HashSet<>();
 
     @Builder
-    //public Todo(String content, List<Todo> reference) {
     public Todo(String content, Set<Todo> reference) {
         this.content = content;
         if (reference != null)
