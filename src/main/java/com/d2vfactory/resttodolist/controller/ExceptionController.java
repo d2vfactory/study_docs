@@ -1,7 +1,6 @@
 package com.d2vfactory.resttodolist.controller;
 
-import com.d2vfactory.resttodolist.exceptions.HasReferenceTodoException;
-import com.d2vfactory.resttodolist.exceptions.NotFoundTodoException;
+import com.d2vfactory.resttodolist.exceptions.RuntimeTodoException;
 import com.d2vfactory.resttodolist.model.dto.ExceptionDTO;
 import com.d2vfactory.resttodolist.model.resource.ExceptionResource;
 import org.springframework.http.HttpStatus;
@@ -15,15 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class ExceptionController {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(value = HasReferenceTodoException.class)
-    public ExceptionResource handleTodoException(HasReferenceTodoException e) {
-        ExceptionResource exceptionResource = new ExceptionResource(createExceptionDTO(e));
-        return exceptionResource;
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(value = NotFoundTodoException.class)
-    public ExceptionResource handleTodoException(NotFoundTodoException e) {
+    @ExceptionHandler(value = RuntimeTodoException.class)
+    public ExceptionResource handleTodoException(RuntimeTodoException e) {
         ExceptionResource exceptionResource = new ExceptionResource(createExceptionDTO(e));
         return exceptionResource;
     }
