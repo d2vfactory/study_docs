@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -40,15 +40,9 @@ public class TodoCommandService {
         return new TodoDTO(todo);
     }
 
-    public TodoDTO updateTodo(Long id, String content, Long... referenceIds) {
+    public TodoDTO updateTodo(Long id, String content) {
         Todo todo = findById(id);
         todo.setContent(content);
-        if (referenceIds == null) {
-            todo.setReference(new ArrayList<>());
-        } else {
-            todo.setReference(repository.findAllByIdIn(referenceIds));
-        }
-
         return new TodoDTO(repository.save(todo));
     }
 

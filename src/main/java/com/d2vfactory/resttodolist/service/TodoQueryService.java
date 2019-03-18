@@ -24,7 +24,7 @@ public class TodoQueryService {
     }
 
     public Page<TodoDTO> getTodoPages(Pageable pageable) {
-        Page<Todo> todoPages = repository.findAll(pageable);
+        Page<Todo> todoPages = repository.fetchFindAll(pageable);
         return new PageImpl<>(
                 todoPages.getContent().stream().map(TodoDTO::new).collect(Collectors.toList()),
                 pageable,

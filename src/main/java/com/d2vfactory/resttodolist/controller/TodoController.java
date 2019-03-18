@@ -2,6 +2,7 @@ package com.d2vfactory.resttodolist.controller;
 
 import com.d2vfactory.resttodolist.model.common.Status;
 import com.d2vfactory.resttodolist.model.dto.TodoDTO;
+import com.d2vfactory.resttodolist.model.form.ReferenceForm;
 import com.d2vfactory.resttodolist.model.form.StatusForm;
 import com.d2vfactory.resttodolist.model.form.TodoForm;
 import com.d2vfactory.resttodolist.model.resource.ErrorResource;
@@ -71,26 +72,53 @@ public class TodoController {
 
     @PutMapping("/{id}")
     public ResponseEntity putTodo(@PathVariable Long id,
-                                  @RequestBody @Valid TodoForm todoForm, Errors errors) {
+                                  @RequestBody @Valid TodoForm form, Errors errors) {
 
         if (errors.hasErrors())
             return badRequest(errors);
 
-        TodoDTO todo = commandService.updateTodo(id, todoForm.getContent(), todoForm.getReferenceIds());
+        TodoDTO todo = commandService.updateTodo(id, form.getContent());
 
         TodoResource todoResource = new TodoResource(todo);
         return ResponseEntity.ok(todoResource);
     }
 
+    @PutMapping("/{id}/reference")
+    public ResponseEntity addTodoReference(@PathVariable Long id,
+                                           @RequestBody @Valid ReferenceForm form, Errors errors) {
+
+        if (errors.hasErrors())
+            return badRequest(errors);
+
+        TodoDTO todo = commandService.addReference(id, form.getReferenceIds());
+
+        TodoResource todoResource = new TodoResource(todo);
+        return ResponseEntity.ok(todoResource);
+    }
+
+    @DeleteMapping("/{id}/reference")
+    public ResponseEntity removeTodoReference(@PathVariable Long id,
+                                              @RequestBody @Valid ReferenceForm form, Errors errors) {
+
+        if (errors.hasErrors())
+            return badRequest(errors);
+
+        TodoDTO todo = commandService.removeReference(id, form.getReferenceIds());
+
+        TodoResource todoResource = new TodoResource(todo);
+        return ResponseEntity.ok(todoResource);
+    }
+
+
     @PutMapping("/{id}/status")
     public ResponseEntity putTodoStatus(@PathVariable Long id,
-                                        @RequestBody @Valid StatusForm statusForm, Errors errors) {
+                                        @RequestBody @Valid StatusForm form, Errors errors) {
 
         if (errors.hasErrors())
             return badRequest(errors);
 
 
-        Status status = Status.valueOf(statusForm.getStatus().toUpperCase());
+        Status status = Status.valueOf(form.getStatus().toUpperCase());
 
         TodoDTO todo = commandService.updateTodoStatus(id, status);
 

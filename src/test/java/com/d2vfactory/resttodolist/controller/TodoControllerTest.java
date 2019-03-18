@@ -5,6 +5,7 @@ import com.d2vfactory.resttodolist.TestDescription;
 import com.d2vfactory.resttodolist.config.RestDocsConfig;
 import com.d2vfactory.resttodolist.model.common.Status;
 import com.d2vfactory.resttodolist.model.entity.Todo;
+import com.d2vfactory.resttodolist.model.form.ReferenceForm;
 import com.d2vfactory.resttodolist.model.form.StatusForm;
 import com.d2vfactory.resttodolist.model.form.TodoForm;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -128,7 +129,6 @@ public class TodoControllerTest extends AbstractRepositoryTest {
     }
 
 
-
     @Test
     @TestDescription("할일 생성 - 내용만 생성한다.")
     public void postTodo() throws Exception {
@@ -180,8 +180,8 @@ public class TodoControllerTest extends AbstractRepositoryTest {
     }
 
     @Test
-    @TestDescription("할일 정보 수정 - 내용과 참조 목록을 수정한다.")
-    public void putTodo_updateContentAndReference() throws Exception {
+    @TestDescription("할일 정보 수정 - 내용을 수정한다.")
+    public void putTodo_updateContent() throws Exception {
         List<Todo> exampleTodoList = createExampleTodo();
         Todo todo1 = exampleTodoList.get(0);
         Todo todo2 = exampleTodoList.get(1);
@@ -189,7 +189,6 @@ public class TodoControllerTest extends AbstractRepositoryTest {
 
         TodoForm todoForm = TodoForm.builder()
                 .content("집안일 변경")
-                .referenceIds(new Long[]{todo2.getId(), todo4.getId()})
                 .build();
 
         mockMvc.perform(
@@ -206,6 +205,116 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("reference[1].content").value("방청소"))
                 .andExpect(jsonPath("referenced").isEmpty())
                 .andExpect(jsonPath("_links.self").exists());
+    }
+
+    @Test
+    @TestDescription("할일2에서 할일1,3,4를 참조에 추가한것을 확인하고 할일 1,3,4에서 참조2에 의해 추가되었음을 확인.")
+    public void todo2AddReference_otherTodoAddReferenced() throws Exception {
+        List<Todo> exampleTodoList = createExampleTodo();
+        Todo todo1 = exampleTodoList.get(0);
+        Todo todo2 = exampleTodoList.get(1);
+        Todo todo3 = exampleTodoList.get(2);
+        Todo todo4 = exampleTodoList.get(3);
+
+        ReferenceForm referenceForm = new ReferenceForm(todo1.getId(), todo3.getId(), todo4.getId());
+
+        // todo2 참조 추가
+        mockMvc.perform(
+                put("/api/todo/{id}/reference", todo2.getId())
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaTypes.HAL_JSON)
+                        .content(objectMapper.writeValueAsString(referenceForm)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("content").value("빨래"))
+                .andExpect(jsonPath("status").value("TODO"))
+                .andExpect(jsonPath("completeDate").isEmpty())
+                .andExpect(jsonPath("reference[0].id").value(todo1.getId()))
+                .andExpect(jsonPath("reference[1].id").value(todo3.getId()))
+                .andExpect(jsonPath("reference[2].id").value(todo4.getId()))
+                .andExpect(jsonPath("referenced[0].id").value(todo1.getId()))
+                .andExpect(jsonPath("_links.self").exists());
+
+        // todo2에서 1,3,4를 참조 걸었기 때문에, 1,3,4의 referenced에는 todo2가 있어야 한다.
+        mockMvc.perform(get("/api/todo"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("_embedded.todoList[0].content").value("집안일"))
+                .andExpect(jsonPath("_embedded.todoList[0].status").value("TODO"))
+                .andExpect(jsonPath("_embedded.todoList[0].contentAndReferenced")
+                        .value("집안일 @" + todo2.getId()))
+                .andExpect(jsonPath("_embedded.todoList[0]._links.self").exists())
+                .andExpect(jsonPath("_embedded.todoList[1].content").value("빨래"))
+                .andExpect(jsonPath("_embedded.todoList[1].contentAndReferenced")
+                        .value("빨래 @" + todo1.getId()))
+                .andExpect(jsonPath("_embedded.todoList[1].status").value("TODO"))
+                .andExpect(jsonPath("_embedded.todoList[1]._links.self").exists())
+                .andExpect(jsonPath("_embedded.todoList[2].content").value("청소"))
+                .andExpect(jsonPath("_embedded.todoList[2].contentAndReferenced")
+                        .value("청소 @" + todo1.getId() + " @" + todo2.getId()))
+                .andExpect(jsonPath("_embedded.todoList[2].status").value("TODO"))
+                .andExpect(jsonPath("_embedded.todoList[2]._links.self").exists())
+                .andExpect(jsonPath("_embedded.todoList[3].content").value("방청소"))
+                .andExpect(jsonPath("_embedded.todoList[3].contentAndReferenced")
+                        .value("방청소 @" + todo1.getId() + " @" + todo2.getId() + " @" + todo3.getId()))
+                .andExpect(jsonPath("_embedded.todoList[3].status").value("TODO"))
+                .andExpect(jsonPath("_embedded.todoList[3]._links.self").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("page").exists())
+        ;
+    }
+
+    @Test
+    public void addReference_todo2_AddSelfReference() throws Exception {
+        List<Todo> exampleTodoList = createExampleTodo();
+        Todo todo1 = exampleTodoList.get(0);
+        Todo todo2 = exampleTodoList.get(1);
+        Todo todo3 = exampleTodoList.get(2);
+        Todo todo4 = exampleTodoList.get(3);
+
+        ReferenceForm referenceForm = new ReferenceForm(todo2.getId());
+
+        mockMvc.perform(
+                put("/api/todo/{id}/reference", todo2.getId())
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaTypes.HAL_JSON)
+                        .content(objectMapper.writeValueAsString(referenceForm)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("content").value("빨래"))
+                .andExpect(jsonPath("status").value("TODO"))
+                .andExpect(jsonPath("completeDate").isEmpty())
+                .andExpect(jsonPath("reference[0].id").value(todo2.getId()))
+                .andExpect(jsonPath("_links.self").exists());
+    }
+
+
+    @Test
+    public void addReference_todo1_duplicatedAddReference() throws Exception {
+        List<Todo> exampleTodoList = createExampleTodo();
+        Todo todo1 = exampleTodoList.get(0);
+        Todo todo2 = exampleTodoList.get(1);
+        Todo todo3 = exampleTodoList.get(2);
+        Todo todo4 = exampleTodoList.get(3);
+
+        ReferenceForm referenceForm = new ReferenceForm(todo2.getId(), todo3.getId());
+
+        mockMvc.perform(
+                put("/api/todo/{id}/reference", todo1.getId())
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaTypes.HAL_JSON)
+                        .content(objectMapper.writeValueAsString(referenceForm)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("content").value("집안일"))
+                .andExpect(jsonPath("status").value("TODO"))
+                .andExpect(jsonPath("completeDate").isEmpty())
+                .andExpect(jsonPath("reference[0].id").value(todo2.getId()))
+                .andExpect(jsonPath("reference[1].id").value(todo3.getId()))
+                .andExpect(jsonPath("reference[2].id").value(todo4.getId()))
+                .andExpect(jsonPath("reference[3]").doesNotExist())
+                .andExpect(jsonPath("_links.self").exists());
+
     }
 
     @Test
@@ -268,15 +377,17 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("_links.self").exists())
         ;
     }
-    
+
     @Test
     @TestDescription("완료 처리 실패 - 참조한 할일이 있을 경우, 해당 할일이 정상상태이면 완료 처리할 수 없다. HasReferenceTodoException 발생")
     public void putTodo_updateStatus_completed_hasReferenceTodoException() throws Exception {
         List<Todo> exampleTodoList = createExampleTodo();
         Todo todo1 = exampleTodoList.get(0);
+        Todo todo3 = exampleTodoList.get(2);
 
         StatusForm statusForm = new StatusForm(Status.COMPLETED.name());
 
+        // 할일1 -> 할일 2,3,4를 참조하고 있어서 실패.
         mockMvc.perform(
                 put("/api/todo/{id}/status", todo1.getId())
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -288,5 +399,19 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("cause").exists())
                 .andExpect(jsonPath("_links.index").exists())
         ;
+
+        // 할일3 -> 할일4를 참조 하고 있어서 실패
+        mockMvc.perform(
+                put("/api/todo/{id}/status", todo3.getId())
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaTypes.HAL_JSON)
+                        .content(objectMapper.writeValueAsString(statusForm)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("message").value("참조된 할일 목록이 존재합니다."))
+                .andExpect(jsonPath("cause").exists())
+                .andExpect(jsonPath("_links.index").exists())
+        ;
     }
+
 }
