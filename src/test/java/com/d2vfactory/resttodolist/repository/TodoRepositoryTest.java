@@ -5,7 +5,6 @@ import com.d2vfactory.resttodolist.TestDescription;
 import com.d2vfactory.resttodolist.model.common.Status;
 import com.d2vfactory.resttodolist.model.entity.Todo;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.Hibernate;
 import org.junit.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
@@ -94,7 +93,6 @@ public class TodoRepositoryTest extends AbstractRepositoryTest {
 
         // when
         Todo findTodo1 = repository.findById(todo1.getId()).get();
-        Hibernate.initialize(findTodo1.getReference());
         Set<Todo> newReference = findTodo1.getReference();
         newReference.remove(todo2);
         findTodo1.setReference(newReference);
@@ -102,16 +100,12 @@ public class TodoRepositoryTest extends AbstractRepositoryTest {
 
         // then
         Todo newTodo1 = repository.findById(todo1.getId()).get();
-        Hibernate.initialize(newTodo1.getReference());
-        Hibernate.initialize(newTodo1.getReferenced());
         assertThat(newTodo1.getContent()).isEqualTo("집안일");
         assertThat(newTodo1.getReference()).containsExactly(todo3, todo4);
         assertThat(newTodo1.getReferenced()).hasSize(0);
 
         // todo1에서 참조를 뺏기 때문에, 참조된 목록에서 todo1이 없어야 한다.
         Todo newTodo2 = repository.findById(todo2.getId()).get();
-        Hibernate.initialize(newTodo2.getReference());
-        Hibernate.initialize(newTodo2.getReferenced());
         assertThat(newTodo2.getContent()).isEqualTo("빨래");
         assertThat(newTodo2.getReference()).hasSize(0);
         assertThat(newTodo2.getReferenced()).hasSize(0);

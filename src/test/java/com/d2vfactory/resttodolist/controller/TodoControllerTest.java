@@ -202,7 +202,8 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("status").value("TODO"))
                 .andExpect(jsonPath("completeDate").isEmpty())
                 .andExpect(jsonPath("reference[0].content").value("빨래"))
-                .andExpect(jsonPath("reference[1].content").value("방청소"))
+                .andExpect(jsonPath("reference[1].content").value("청소"))
+                .andExpect(jsonPath("reference[2].content").value("방청소"))
                 .andExpect(jsonPath("referenced").isEmpty())
                 .andExpect(jsonPath("_links.self").exists());
     }
@@ -265,12 +266,10 @@ public class TodoControllerTest extends AbstractRepositoryTest {
     }
 
     @Test
+    @TestDescription("자기 자신은 참조에서 제외 - 할일 2에서 할일 2를 참조하여도 저장되지 않는다.")
     public void addReference_todo2_AddSelfReference() throws Exception {
         List<Todo> exampleTodoList = createExampleTodo();
-        Todo todo1 = exampleTodoList.get(0);
         Todo todo2 = exampleTodoList.get(1);
-        Todo todo3 = exampleTodoList.get(2);
-        Todo todo4 = exampleTodoList.get(3);
 
         ReferenceForm referenceForm = new ReferenceForm(todo2.getId());
 
@@ -284,12 +283,13 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("content").value("빨래"))
                 .andExpect(jsonPath("status").value("TODO"))
                 .andExpect(jsonPath("completeDate").isEmpty())
-                .andExpect(jsonPath("reference[0].id").value(todo2.getId()))
+                .andExpect(jsonPath("reference[0]").doesNotExist())
                 .andExpect(jsonPath("_links.self").exists());
     }
 
 
     @Test
+    @TestDescription("중복 참조 제외 - 자료형이 HashSet 이라서 중복 되지 않음")
     public void addReference_todo1_duplicatedAddReference() throws Exception {
         List<Todo> exampleTodoList = createExampleTodo();
         Todo todo1 = exampleTodoList.get(0);

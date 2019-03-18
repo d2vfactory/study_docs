@@ -133,6 +133,48 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
     }
 
     @Test
+    @TestDescription("참조 목록 추가 - 참조가 있는 할일에 참조 추가")
+    public void addedReference_addReference() {
+        // given
+        TodoDTO todo1 = commandService.createTodo("집안일");
+        TodoDTO todo2 = commandService.createTodo("할일", todo1.getId());
+        TodoDTO todo3 = commandService.createTodo("청소");
+
+        // when
+        commandService.addReference(todo2.getId(), todo3.getId());
+        Page<TodoDTO> todoList = queryService.getTodoPages(PageRequest.of(0, 3, Sort.by("id").ascending()));
+
+        // then
+        TodoDTO findTodo1 = todoList.getContent().get(0);
+        assertThat(findTodo1)
+                .hasFieldOrPropertyWithValue("id", todo1.getId())
+                .hasFieldOrPropertyWithValue("content", "집안일");
+        assertThat(findTodo1.getReference())
+                .hasSize(0);
+        assertThat(findTodo1.getReferenced())
+                .hasSize(1);
+
+        TodoDTO findTodo2 = todoList.getContent().get(1);
+        assertThat(findTodo2)
+                .hasFieldOrPropertyWithValue("id", todo2.getId())
+                .hasFieldOrPropertyWithValue("content", "할일");
+        assertThat(findTodo2.getReference())
+                .hasSize(2);
+        assertThat(findTodo2.getReferenced())
+                .hasSize(0);
+
+        TodoDTO findTodo3 = todoList.getContent().get(2);
+        assertThat(findTodo3)
+                .hasFieldOrPropertyWithValue("id", todo3.getId())
+                .hasFieldOrPropertyWithValue("content", "청소");
+        assertThat(findTodo3.getReference())
+                .hasSize(0);
+        assertThat(findTodo3.getReferenced())
+                .hasSize(1);
+
+    }
+
+    @Test
     @TestDescription("참조 목록 제외 - 참조 목록에서 제외하면 참조된 할일의 참조된 목록에서도 제외된다.")
     public void removeReference() {
         // given

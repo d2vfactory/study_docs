@@ -6,13 +6,16 @@ import com.d2vfactory.resttodolist.model.common.Status;
 import com.d2vfactory.resttodolist.model.dto.TodoDTO;
 import com.d2vfactory.resttodolist.model.entity.Todo;
 import com.d2vfactory.resttodolist.repository.TodoRepository;
-import org.hibernate.Hibernate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 public class TodoCommandService {
@@ -48,12 +51,29 @@ public class TodoCommandService {
 
     public TodoDTO addReference(Long id, Long... referenceIds) {
         Todo todo = findById(id);
-        todo.getReference().addAll(repository.findAllByIdIn(referenceIds));
+
+        // 자기 자신 제외
+        List<Long> newReferenceIds = Arrays.stream(referenceIds)
+                .filter(x -> !x.equals(id))
+                .collect(Collectors.toList());
+
+        if (newReferenceIds.isEmpty())
+            return new TodoDTO(todo);
+
+        todo.getReference().addAll(repository.findAllByIdIn(newReferenceIds));
+
+        log.info("# newReferenceIds : {}");
+        //todo.getReference().addAll(repository.findAllByIdIn(referenceIds));
+
         return new TodoDTO(repository.save(todo));
     }
 
     public TodoDTO removeReference(Long id, Long... referenceIds) {
         Todo todo = findById(id);
+
+        if (referenceIds.length == 0)
+            return new TodoDTO(todo);
+
         todo.getReference().removeAll(repository.findAllByIdIn(referenceIds));
         return new TodoDTO(repository.save(todo));
     }
@@ -69,7 +89,6 @@ public class TodoCommandService {
 
     private TodoDTO completeTodo(Long id) {
         Todo todo = findById(id);
-        Hibernate.initialize(todo.getReference());
 
         // 참조된 할일 중에 상태가 "할일"인 건이 1개라도 있는 경우, 완료 안되게 처리.
         long cntReferenceTodoStatus = todo.getReference().stream()
