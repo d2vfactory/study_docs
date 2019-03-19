@@ -61,10 +61,7 @@ public class TodoCommandService {
             return new TodoDTO(todo);
 
         todo.getReference().addAll(repository.findAllByIdIn(newReferenceIds));
-
-        log.info("# newReferenceIds : {}");
-        //todo.getReference().addAll(repository.findAllByIdIn(referenceIds));
-
+        todo.setUpdateDate(LocalDateTime.now());
         return new TodoDTO(repository.save(todo));
     }
 
@@ -75,6 +72,7 @@ public class TodoCommandService {
             return new TodoDTO(todo);
 
         todo.getReference().removeAll(repository.findAllByIdIn(referenceIds));
+        todo.setUpdateDate(LocalDateTime.now());
         return new TodoDTO(repository.save(todo));
     }
 
