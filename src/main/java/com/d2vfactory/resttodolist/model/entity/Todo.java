@@ -8,9 +8,7 @@ import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -29,7 +27,7 @@ public class Todo extends TimeEntity {
     private String content;
 
     @Enumerated(value = EnumType.STRING)
-    private Status status = Status.TODO;
+    private Status status = Status.ACTIVE;
 
     private LocalDateTime completeDate;
 

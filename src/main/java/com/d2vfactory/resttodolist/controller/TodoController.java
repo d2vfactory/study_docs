@@ -1,6 +1,7 @@
 package com.d2vfactory.resttodolist.controller;
 
 import com.d2vfactory.resttodolist.model.common.Status;
+import com.d2vfactory.resttodolist.model.dto.ReferenceTodoDTO;
 import com.d2vfactory.resttodolist.model.dto.TodoDTO;
 import com.d2vfactory.resttodolist.model.form.ReferenceForm;
 import com.d2vfactory.resttodolist.model.form.StatusForm;
@@ -21,6 +22,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
@@ -51,11 +55,21 @@ public class TodoController {
         return ResponseEntity.ok(pageResources);
     }
 
+    @GetMapping("/allActiveTodo")
+    public ResponseEntity getActiveTodoList(){
+        Map<String, List<ReferenceTodoDTO>> map = new HashMap<>();
+        map.put("todoList", queryService.getActiveTodoList());
+        return ResponseEntity.ok(map);
+    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity getTodo(@PathVariable Long id) {
         TodoResource todoResource = new TodoResource(queryService.getTodo(id));
         return ResponseEntity.ok(todoResource);
     }
+
+
 
     @PostMapping
     public ResponseEntity postTodo(@RequestBody @Valid TodoForm todoForm, Errors errors) {

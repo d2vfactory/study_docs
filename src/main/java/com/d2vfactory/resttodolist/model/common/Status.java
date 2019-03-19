@@ -4,7 +4,7 @@ import lombok.Getter;
 
 public enum Status {
 
-    TODO("진행중"),
+    ACTIVE("진행중"),
     COMPLETED("완료"),
     DELETED("삭제");
 

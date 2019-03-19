@@ -92,7 +92,7 @@ public class TodoCommandService {
 
         // 참조된 할일 중에 상태가 "할일"인 건이 1개라도 있는 경우, 완료 안되게 처리.
         long cntReferenceTodoStatus = todo.getReference().stream()
-                .filter(x -> x.getStatus() == Status.TODO)
+                .filter(x -> x.getStatus() == Status.ACTIVE)
                 .count();
 
         if (cntReferenceTodoStatus > 0)

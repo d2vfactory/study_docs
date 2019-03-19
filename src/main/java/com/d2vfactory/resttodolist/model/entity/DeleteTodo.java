@@ -6,15 +6,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /*
  * repository.deleteAll 하기 위한 용도..
- * Entity TODO에서 @Where clause로 DELETED는 제외처리 했기 때문에,
- * 해당 repository에서는 deleteAll을 하지 못한다.
+ * Entity TODO에서 @Where clause로 DELETED는 제외처리 했기 때문에,해당 repository에서는 deleteAll을 하지 못한다.
  */
 @Entity
 @Getter

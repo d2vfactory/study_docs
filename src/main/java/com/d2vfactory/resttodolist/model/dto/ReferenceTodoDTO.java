@@ -1,6 +1,7 @@
 package com.d2vfactory.resttodolist.model.dto;
 
 import com.d2vfactory.resttodolist.model.common.Status;
+import com.d2vfactory.resttodolist.model.entity.ActiveTodo;
 import com.d2vfactory.resttodolist.model.entity.Todo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
@@ -39,5 +40,14 @@ public class ReferenceTodoDTO {
         this.completeDate = todo.getCompleteDate();
     }
 
+    public ReferenceTodoDTO(ActiveTodo todo) {
+        this.id = todo.getId();
+        this.content = todo.getContent();
+        this.status = todo.getStatus();
+        this.statusName = todo.getStatus().getKorName();
+        this.createDate = todo.getCreateDate();
+        this.updateDate = todo.getUpdateDate();
+        this.completeDate = todo.getCompleteDate();
+    }
 
 }

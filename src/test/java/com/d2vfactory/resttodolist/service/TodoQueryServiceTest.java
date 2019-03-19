@@ -3,6 +3,7 @@ package com.d2vfactory.resttodolist.service;
 import com.d2vfactory.resttodolist.AbstractRepositoryTest;
 import com.d2vfactory.resttodolist.TestDescription;
 import com.d2vfactory.resttodolist.exceptions.NotFoundTodoException;
+import com.d2vfactory.resttodolist.model.dto.ReferenceTodoDTO;
 import com.d2vfactory.resttodolist.model.dto.TodoDTO;
 import com.d2vfactory.resttodolist.model.entity.Todo;
 import lombok.extern.slf4j.Slf4j;
@@ -105,6 +106,5 @@ public class TodoQueryServiceTest extends AbstractRepositoryTest {
         // then
         // => throw new NotFoundTodoException
     }
-
 
 }

@@ -278,7 +278,7 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
 
     @Test
     @TestDescription("할일을 completed 상태로 변경했다가 다시 todo 상태로 변경하기")
-    public void updateStatus_completed_todo() {
+    public void updateStatus_completed_active() {
         // given
         TodoDTO todo1 = commandService.createTodo("집안일");
 
@@ -286,11 +286,11 @@ public class TodoCommandServiceTest extends AbstractRepositoryTest {
         commandService.updateTodoStatus(todo1.getId(), Status.COMPLETED);
         TodoDTO findTodo1 = queryService.getTodo(todo1.getId());
 
-        commandService.updateTodoStatus(todo1.getId(), Status.TODO);
+        commandService.updateTodoStatus(todo1.getId(), Status.ACTIVE);
         TodoDTO findTodo2 = queryService.getTodo(todo1.getId());
 
         // then
         assertThat(findTodo1.getStatus()).isEqualTo(Status.COMPLETED);
-        assertThat(findTodo2.getStatus()).isEqualTo(Status.TODO);
+        assertThat(findTodo2.getStatus()).isEqualTo(Status.ACTIVE);
     }
 }

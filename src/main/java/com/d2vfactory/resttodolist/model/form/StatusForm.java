@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 public class StatusForm {
 
     @StatusConstraint
-    private String status = Status.TODO.name();
+    private String status = Status.ACTIVE.name();
 
 }

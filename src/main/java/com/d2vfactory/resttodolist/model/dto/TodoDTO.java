@@ -38,7 +38,7 @@ public class TodoDTO {
 
     private List<ReferenceTodoDTO> reference;
 
-    private Set<ReferenceTodoDTO> referenced;
+    private List<ReferenceTodoDTO> referenced;
 
     public TodoDTO(Todo todo) {
         this.id = todo.getId();
@@ -49,7 +49,7 @@ public class TodoDTO {
         this.completeDate = todo.getCompleteDate();
 
         this.reference = todo.getReference().stream().map(ReferenceTodoDTO::new).collect(Collectors.toList());
-        this.referenced = todo.getReferenced().stream().map(ReferenceTodoDTO::new).collect(Collectors.toSet());
+        this.referenced = todo.getReferenced().stream().map(ReferenceTodoDTO::new).collect(Collectors.toList());
 
         this.contentAndReferenced = content + " " +
                 todo.getReferenced().stream()

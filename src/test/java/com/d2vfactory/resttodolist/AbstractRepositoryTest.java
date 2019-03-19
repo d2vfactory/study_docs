@@ -5,8 +5,8 @@ import com.d2vfactory.resttodolist.model.entity.Todo;
 import com.d2vfactory.resttodolist.repository.DeleteTodoRepository;
 import com.d2vfactory.resttodolist.repository.TodoRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.sql.Delete;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Ignore
 @RunWith(SpringRunner.class)
 public class AbstractRepositoryTest {
 
