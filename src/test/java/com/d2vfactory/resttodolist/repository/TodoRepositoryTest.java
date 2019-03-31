@@ -7,6 +7,7 @@ import com.d2vfactory.resttodolist.model.entity.Todo;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +22,8 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-@DataJpaTest
+//@DataJpaTest
+@SpringBootTest
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 public class TodoRepositoryTest extends AbstractRepositoryTest {
 

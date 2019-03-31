@@ -1,6 +1,7 @@
 package com.d2vfactory.resttodolist.controller;
 
 import com.d2vfactory.resttodolist.AbstractRepositoryTest;
+import com.d2vfactory.resttodolist.RestDocConfiguration;
 import com.d2vfactory.resttodolist.TestDescription;
 import com.d2vfactory.resttodolist.model.common.Status;
 import com.d2vfactory.resttodolist.model.entity.Todo;
@@ -13,12 +14,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.*;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,6 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureRestDocs
+@Import(RestDocConfiguration.class)
 public class TodoControllerTest extends AbstractRepositoryTest {
 
     @Autowired
@@ -34,6 +44,21 @@ public class TodoControllerTest extends AbstractRepositoryTest {
 
     @Autowired
     protected ObjectMapper objectMapper;
+
+
+    @Test
+    public void index() throws Exception {
+        mockMvc.perform(get("/api"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andDo(document("index",
+                        links(
+                                halLinks(),
+                                linkWithRel("todo-list").optional().description("할일 목록 링크")
+                        )
+                ))
+        ;
+    }
 
     /*
     ### 목록조회 예시 및 설명
@@ -60,7 +85,10 @@ public class TodoControllerTest extends AbstractRepositoryTest {
         Todo todo1 = exampleTodoList.get(0);
         Todo todo3 = exampleTodoList.get(2);
 
-        mockMvc.perform(get("/api/todo"))
+        mockMvc.perform(get("/api/todo")
+                .param("page", "0")
+                .param("size", "5")
+        )
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("_embedded.todoList[0].content").value("집안일"))
@@ -85,6 +113,28 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("_links.next").exists())
                 .andExpect(jsonPath("_links.last").exists())
                 .andExpect(jsonPath("page").exists())
+                .andDo(document("todo",
+                        requestParameters(
+                                parameterWithName("page").description("페이지 번호 (0부터 시작)"),
+                                parameterWithName("size").description("페이지 사이즈 (default:20)")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("_embedded.todoList[0].id").description("ID"),
+                                fieldWithPath("_embedded.todoList[0].content").description("할일 내용"),
+                                fieldWithPath("_embedded.todoList[0].contentAndReferenced").description("할일 내용과 참조된 할일 ID들."),
+                                fieldWithPath("_embedded.todoList[0].status").description("상태 코드 (ACTIVE, COMPLETED, DELETE)"),
+                                fieldWithPath("_embedded.todoList[0].statusName").description("상태 코드의 한글명 (진행중, 완료, 삭제)"),
+                                fieldWithPath("_embedded.todoList[0].reference").description("참조한 할일 들"),
+                                fieldWithPath("_embedded.todoList[0].referenced").description("참조된 할일 들")
+                        ),
+                        links(
+                                halLinks(),
+                                linkWithRel("first").optional().description("첫페이지 링크"),
+                                linkWithRel("self").optional().description("현재 페이지 링크"),
+                                linkWithRel("last").optional().description("마지막 페이지 링크"),
+                                linkWithRel("next").optional().description("다음 페이지 링크")
+                        )
+                ))
         ;
     }
 

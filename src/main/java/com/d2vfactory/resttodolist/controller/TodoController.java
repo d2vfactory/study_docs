@@ -15,8 +15,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.PagedResources;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ import java.util.Map;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
-@RequestMapping(value="/api/todo", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+@RequestMapping(value = "/api/todo", produces = MediaTypes.HAL_JSON_UTF8_VALUE)
 @RestController
 public class TodoController {
 
@@ -53,11 +54,13 @@ public class TodoController {
 
         Page<TodoDTO> pages = queryService.getTodoPages(pageRequest);
         PagedResources<TodoResource> pageResources = assembler.toResource(pages, TodoResource::new);
+        pageResources.add(new Link("/docs/index.html#todo").withRel("profile"));
+
         return ResponseEntity.ok(pageResources);
     }
 
     @GetMapping("/allActiveTodo")
-    public ResponseEntity getActiveTodoList(){
+    public ResponseEntity getActiveTodoList() {
         Map<String, List<ReferenceTodoDTO>> map = new HashMap<>();
         map.put("todoList", queryService.getActiveTodoList());
         return ResponseEntity.ok(map);
@@ -69,7 +72,6 @@ public class TodoController {
         TodoResource todoResource = new TodoResource(queryService.getTodo(id));
         return ResponseEntity.ok(todoResource);
     }
-
 
 
     @PostMapping
