@@ -132,7 +132,8 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                                 linkWithRel("first").optional().description("첫페이지 링크"),
                                 linkWithRel("self").optional().description("현재 페이지 링크"),
                                 linkWithRel("last").optional().description("마지막 페이지 링크"),
-                                linkWithRel("next").optional().description("다음 페이지 링크")
+                                linkWithRel("next").optional().description("다음 페이지 링크"),
+                                linkWithRel("profile").optional().description("rest doc 링크")
                         )
                 ))
         ;
