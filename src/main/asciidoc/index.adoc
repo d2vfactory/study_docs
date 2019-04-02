@@ -77,21 +77,64 @@
 
 
 [[resources-index-access]]
-=== 인덱스 조회
+=== 인덱스 조회 (/api/)
 
 `GET` 요청을 사용하여 인덱스에 접근할 수 있다.
 
-operation::index[snippets='curl-request,httpie-request,http-response,links']
+operation::index[snippets='curl-request,links,http-response']
 
-[[resources-todo]]
-== 할일 목록
+[[resources-todolist]]
+== 할일
 
-할일 목록 리소스는 이벤트를 만들거나 조회할 때 사용한다.
+할일 리소스는 할일/목록 을 조회하거나 생성/수정/완료 할때 사용한다.
 
-[[resources-todo]]
-=== 할일 목록 조회
+[[resources-todolist-all]]
+=== 할일 목록 조회 (/api/todo)
 
-`GET` 요청을 사용하여 서비스의 모든 이벤트를 조회할 수 있다.
+`GET` 요청을 사용하여 모든 할일 목록을 조회할 수 있다.
 
-operation::todo[snippets='curl-request,httpie-request,response-fields,http-response,links']
+operation::todo[snippets='curl-request,response-fields,links,http-response']
 
+
+[[resources-todolist-id]]
+=== 할일 조회 (/api/todo/{id})
+
+`GET` 요청을 사용하여 {id}에 해당하는 할일을 조회할 수 있다.
+
+operation::todo-id[snippets='curl-request,path-parameters,response-fields,links,http-response']
+
+[[resources-todolist-create]]
+=== 할일 추가 (/api/todo)
+
+`POST` 요청을 사용하여 할일을 추가할 수 있다.
+
+operation::todo-create[snippets='curl-request,request-fields,response-fields,links,http-response']
+
+[[resources-todolist-update-content]]
+=== 할일 내용 수정 (/api/todo/{id})
+
+`PUT` 요청을 사용하여 할일 내용을 수정 할 수 있다.
+
+operation::todo-update-content[snippets='curl-request,path-parameters,request-fields,response-fields,links,http-response']
+
+
+[[resources-todolist-add-reference]]
+=== 할일 참조 추가 (/api/todo/{id}/reference)
+
+`PUT` 요청을 사용하여 할일을 참조 할 수 있다.
+
+operation::todo-add-reference[snippets='curl-request,path-parameters,request-fields,response-fields,links,http-response']
+
+[[resources-todolist-remove-reference]]
+=== 할일 참조 제외 (/api/todo/{id}/reference)
+
+`DELETE` 요청을 사용하여 참조한 할일을 제외할 수 있다.
+
+operation::todo-remove-reference[snippets='curl-request,path-parameters,request-fields,response-fields,links,http-response']
+
+[[resources-todolist-update-status]]
+=== 할일 완료 처리 (상태변경) (/api/todo/{id}/status)
+
+`PUT` 요청을 사용하여 할일 상태를 변경할 수 있다. (진행중, 완료, 삭제)
+
+operation::todo-update-status[snippets='curl-request,path-parameters,request-fields,response-fields,links,http-response']

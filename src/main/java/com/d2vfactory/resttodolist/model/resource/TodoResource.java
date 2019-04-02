@@ -18,6 +18,7 @@ public class TodoResource extends Resource<TodoDTO> {
             add(linkTo(methodOn(IndexController.class).index()).withRel("index"));
         } else {
             add(linkTo(methodOn(TodoController.class).getTodo(todo.getId())).withSelfRel());
+            add(new Link("/docs/index.html#todo-id").withRel("profile"));
         }
 
     }

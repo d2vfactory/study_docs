@@ -17,16 +17,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.payload.PayloadDocumentation.relaxedResponseFields;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -75,19 +75,13 @@ public class TodoControllerTest extends AbstractRepositoryTest {
         // 8 * 4 => 32개 데이터 만들기.
         List<Todo> exampleTodoList = createExampleTodo();
         createExampleTodo();
-        createExampleTodo();
-        createExampleTodo();
-        createExampleTodo();
-        createExampleTodo();
-        createExampleTodo();
-        createExampleTodo();
 
         Todo todo1 = exampleTodoList.get(0);
         Todo todo3 = exampleTodoList.get(2);
 
         mockMvc.perform(get("/api/todo")
                 .param("page", "0")
-                .param("size", "5")
+                .param("size", "4")
         )
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -125,7 +119,10 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                                 fieldWithPath("_embedded.todoList[0].status").description("상태 코드 (ACTIVE, COMPLETED, DELETE)"),
                                 fieldWithPath("_embedded.todoList[0].statusName").description("상태 코드의 한글명 (진행중, 완료, 삭제)"),
                                 fieldWithPath("_embedded.todoList[0].reference").description("참조한 할일 들"),
-                                fieldWithPath("_embedded.todoList[0].referenced").description("참조된 할일 들")
+                                fieldWithPath("_embedded.todoList[0].referenced").description("참조된 할일 들"),
+                                fieldWithPath("_embedded.todoList[0].createDate").description("생성일"),
+                                fieldWithPath("_embedded.todoList[0].updateDate").description("최종 수정일"),
+                                fieldWithPath("_embedded.todoList[0].completeDate").description("완료일")
                         ),
                         links(
                                 halLinks(),
@@ -145,7 +142,7 @@ public class TodoControllerTest extends AbstractRepositoryTest {
         List<Todo> exampleTodoList = createExampleTodo();
         Todo todo1 = exampleTodoList.get(0);
 
-        mockMvc.perform(get("/api/todo/{id}", todo1.getId()))
+        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/todo/{id}", todo1.getId()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("content").value("집안일"))
@@ -153,6 +150,28 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("reference[1].content").value("청소"))
                 .andExpect(jsonPath("reference[2].content").value("방청소"))
                 .andExpect(jsonPath("_links.self").exists())
+                .andDo(document("todo-id",
+                        pathParameters(
+                                parameterWithName("id").description("할일 ID")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("id").description("ID"),
+                                fieldWithPath("content").description("할일 내용"),
+                                fieldWithPath("contentAndReferenced").description("할일 내용과 참조된 할일 ID들."),
+                                fieldWithPath("status").description("상태 코드 (ACTIVE, COMPLETED, DELETE)"),
+                                fieldWithPath("statusName").description("상태 코드의 한글명 (진행중, 완료, 삭제)"),
+                                fieldWithPath("reference").description("참조한 할일 들"),
+                                fieldWithPath("referenced").description("참조된 할일 들"),
+                                fieldWithPath("createDate").description("생성일"),
+                                fieldWithPath("updateDate").description("최종 수정일"),
+                                fieldWithPath("completeDate").description("완료일")
+                        ),
+                        links(
+                                halLinks(),
+                                linkWithRel("self").optional().description("현재 페이지 링크"),
+                                linkWithRel("profile").optional().description("rest doc 링크")
+                        )
+                ))
         ;
 
     }
@@ -221,6 +240,29 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("reference[1].content").value(todo3.getContent()))
                 .andExpect(jsonPath("referenced").isEmpty())
                 .andExpect(jsonPath("_links.self").exists())
+                .andDo(document("todo-create",
+                        relaxedRequestFields(
+                                fieldWithPath("content").description("할일 내용"),
+                                fieldWithPath("referenceIds").description("참조할 할일 ID (csv)")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("id").description("ID"),
+                                fieldWithPath("content").description("할일 내용"),
+                                fieldWithPath("contentAndReferenced").description("할일 내용과 참조된 할일 ID들."),
+                                fieldWithPath("status").description("상태 코드 (ACTIVE, COMPLETED, DELETE)"),
+                                fieldWithPath("statusName").description("상태 코드의 한글명 (진행중, 완료, 삭제)"),
+                                fieldWithPath("reference").description("참조한 할일 들"),
+                                fieldWithPath("referenced").description("참조된 할일 들"),
+                                fieldWithPath("createDate").description("생성일"),
+                                fieldWithPath("updateDate").description("최종 수정일"),
+                                fieldWithPath("completeDate").description("완료일")
+                        ),
+                        links(
+                                halLinks(),
+                                linkWithRel("self").optional().description("현재 페이지 링크"),
+                                linkWithRel("profile").optional().description("rest doc 링크")
+                        )
+                ))
         ;
     }
 
@@ -237,7 +279,7 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .build();
 
         mockMvc.perform(
-                put("/api/todo/{id}", todo1.getId())
+                RestDocumentationRequestBuilders.put("/api/todo/{id}", todo1.getId())
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .accept(MediaTypes.HAL_JSON)
                         .content(objectMapper.writeValueAsString(todoForm)))
@@ -250,7 +292,33 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("reference[1].content").value("청소"))
                 .andExpect(jsonPath("reference[2].content").value("방청소"))
                 .andExpect(jsonPath("referenced").isEmpty())
-                .andExpect(jsonPath("_links.self").exists());
+                .andExpect(jsonPath("_links.self").exists())
+                .andDo(document("todo-update-content",
+                        pathParameters(
+                                parameterWithName("id").description("할일 ID")
+                        ),
+                        relaxedRequestFields(
+                                fieldWithPath("content").description("할일 내용")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("id").description("ID"),
+                                fieldWithPath("content").description("할일 내용"),
+                                fieldWithPath("contentAndReferenced").description("할일 내용과 참조된 할일 ID들."),
+                                fieldWithPath("status").description("상태 코드 (ACTIVE, COMPLETED, DELETE)"),
+                                fieldWithPath("statusName").description("상태 코드의 한글명 (진행중, 완료, 삭제)"),
+                                fieldWithPath("reference").description("참조한 할일 들"),
+                                fieldWithPath("referenced").description("참조된 할일 들"),
+                                fieldWithPath("createDate").description("생성일"),
+                                fieldWithPath("updateDate").description("최종 수정일"),
+                                fieldWithPath("completeDate").description("완료일")
+                        ),
+                        links(
+                                halLinks(),
+                                linkWithRel("self").optional().description("현재 페이지 링크"),
+                                linkWithRel("profile").optional().description("rest doc 링크")
+                        )
+                ))
+        ;
     }
 
     @Test
@@ -266,7 +334,7 @@ public class TodoControllerTest extends AbstractRepositoryTest {
 
         // todo2 참조 추가
         mockMvc.perform(
-                put("/api/todo/{id}/reference", todo2.getId())
+                RestDocumentationRequestBuilders.put("/api/todo/{id}/reference", todo2.getId())
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .accept(MediaTypes.HAL_JSON)
                         .content(objectMapper.writeValueAsString(referenceForm)))
@@ -279,7 +347,33 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("reference[1].id").value(todo3.getId()))
                 .andExpect(jsonPath("reference[2].id").value(todo4.getId()))
                 .andExpect(jsonPath("referenced[0].id").value(todo1.getId()))
-                .andExpect(jsonPath("_links.self").exists());
+                .andExpect(jsonPath("_links.self").exists())
+                .andDo(document("todo-add-reference",
+                        pathParameters(
+                                parameterWithName("id").description("할일 ID")
+                        ),
+                        relaxedRequestFields(
+                                fieldWithPath("referenceIds").description("추가할 할일 ID (csv)")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("id").description("ID"),
+                                fieldWithPath("content").description("할일 내용"),
+                                fieldWithPath("contentAndReferenced").description("할일 내용과 참조된 할일 ID들."),
+                                fieldWithPath("status").description("상태 코드 (ACTIVE, COMPLETED, DELETE)"),
+                                fieldWithPath("statusName").description("상태 코드의 한글명 (진행중, 완료, 삭제)"),
+                                fieldWithPath("reference").description("참조한 할일 들"),
+                                fieldWithPath("referenced").description("참조된 할일 들"),
+                                fieldWithPath("createDate").description("생성일"),
+                                fieldWithPath("updateDate").description("최종 수정일"),
+                                fieldWithPath("completeDate").description("완료일")
+                        ),
+                        links(
+                                halLinks(),
+                                linkWithRel("self").optional().description("현재 페이지 링크"),
+                                linkWithRel("profile").optional().description("rest doc 링크")
+                        )
+                ))
+        ;
 
         // todo2에서 1,3,4를 참조 걸었기 때문에, 1,3,4의 referenced에는 todo2가 있어야 한다.
         mockMvc.perform(get("/api/todo"))
@@ -329,7 +423,8 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("status").value("ACTIVE"))
                 .andExpect(jsonPath("completeDate").isEmpty())
                 .andExpect(jsonPath("reference[0]").doesNotExist())
-                .andExpect(jsonPath("_links.self").exists());
+                .andExpect(jsonPath("_links.self").exists())
+        ;
     }
 
 
@@ -359,7 +454,57 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("reference[2].id").value(todo4.getId()))
                 .andExpect(jsonPath("reference[3]").doesNotExist())
                 .andExpect(jsonPath("_links.self").exists());
+    }
 
+    @Test
+    @TestDescription("할일 참조 제외")
+    public void addReference_todo1_removeReference() throws Exception {
+        List<Todo> exampleTodoList = createExampleTodo();
+        Todo todo1 = exampleTodoList.get(0);
+        Todo todo2 = exampleTodoList.get(1);
+        Todo todo3 = exampleTodoList.get(2);
+        Todo todo4 = exampleTodoList.get(3);
+
+        ReferenceForm referenceForm = new ReferenceForm(todo2.getId(), todo3.getId());
+
+        mockMvc.perform(
+                RestDocumentationRequestBuilders.delete("/api/todo/{id}/reference", todo1.getId())
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaTypes.HAL_JSON)
+                        .content(objectMapper.writeValueAsString(referenceForm)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("content").value("집안일"))
+                .andExpect(jsonPath("status").value("ACTIVE"))
+                .andExpect(jsonPath("completeDate").isEmpty())
+                .andExpect(jsonPath("reference[0].id").value(todo4.getId()))
+                .andExpect(jsonPath("_links.self").exists())
+                .andDo(document("todo-remove-reference",
+                        pathParameters(
+                                parameterWithName("id").description("할일 ID")
+                        ),
+                        relaxedRequestFields(
+                                fieldWithPath("referenceIds").description("참조에서 제외할 할일 ID (csv)")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("id").description("ID"),
+                                fieldWithPath("content").description("할일 내용"),
+                                fieldWithPath("contentAndReferenced").description("할일 내용과 참조된 할일 ID들."),
+                                fieldWithPath("status").description("상태 코드 (ACTIVE, COMPLETED, DELETE)"),
+                                fieldWithPath("statusName").description("상태 코드의 한글명 (진행중, 완료, 삭제)"),
+                                fieldWithPath("reference").description("참조한 할일 들"),
+                                fieldWithPath("referenced").description("참조된 할일 들"),
+                                fieldWithPath("createDate").description("생성일"),
+                                fieldWithPath("updateDate").description("최종 수정일"),
+                                fieldWithPath("completeDate").description("완료일")
+                        ),
+                        links(
+                                halLinks(),
+                                linkWithRel("self").optional().description("현재 페이지 링크"),
+                                linkWithRel("profile").optional().description("rest doc 링크")
+                        )
+                ))
+        ;
     }
 
     @Test
@@ -411,7 +556,7 @@ public class TodoControllerTest extends AbstractRepositoryTest {
         StatusForm statusForm = new StatusForm(Status.COMPLETED.name());
 
         mockMvc.perform(
-                put("/api/todo/{id}/status", todo2.getId())
+                RestDocumentationRequestBuilders.put("/api/todo/{id}/status", todo2.getId())
                         .contentType(MediaType.APPLICATION_JSON_UTF8)
                         .accept(MediaTypes.HAL_JSON)
                         .content(objectMapper.writeValueAsString(statusForm)))
@@ -420,6 +565,31 @@ public class TodoControllerTest extends AbstractRepositoryTest {
                 .andExpect(jsonPath("status").value("COMPLETED"))
                 .andExpect(jsonPath("completeDate").isNotEmpty())
                 .andExpect(jsonPath("_links.self").exists())
+                .andDo(document("todo-update-status",
+                        pathParameters(
+                                parameterWithName("id").description("할일 ID")
+                        ),
+                        relaxedRequestFields(
+                                fieldWithPath("status").description("변경할 상태 값: ACTIVE(진행중), COMPLETED(완료), DELETE(삭제)")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("id").description("ID"),
+                                fieldWithPath("content").description("할일 내용"),
+                                fieldWithPath("contentAndReferenced").description("할일 내용과 참조된 할일 ID들."),
+                                fieldWithPath("status").description("상태 코드 (ACTIVE, COMPLETED, DELETE)"),
+                                fieldWithPath("statusName").description("상태 코드의 한글명 (진행중, 완료, 삭제)"),
+                                fieldWithPath("reference").description("참조한 할일 들"),
+                                fieldWithPath("referenced").description("참조된 할일 들"),
+                                fieldWithPath("createDate").description("생성일"),
+                                fieldWithPath("updateDate").description("최종 수정일"),
+                                fieldWithPath("completeDate").description("완료일")
+                        ),
+                        links(
+                                halLinks(),
+                                linkWithRel("self").optional().description("현재 페이지 링크"),
+                                linkWithRel("profile").optional().description("rest doc 링크")
+                        )
+                ))
         ;
     }
 
